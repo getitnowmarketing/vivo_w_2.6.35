@@ -40,6 +40,8 @@
 #define SCSS_CLK_SEL_ADDR	(MSM_ACC_BASE + 0x08)
 
 #define PLL2_L_VAL_ADDR		(MSM_CLK_CTL_BASE + 0x33C)
+
+#ifndef CONFIG_ACPUCLOCK_OVERCLOCKING
 #define PLL2_806_MHZ		42
 #define PLL2_1024_MHZ		53
 #define PLL2_1200_MHZ 		125
@@ -52,6 +54,7 @@
 #define PLL2_1520_MHZ 		79
 #define PLL2_1540_MHZ 		80
 #define PLL2_1560_MHZ 		81
+#endif
 
 #define dprintk(msg...) \
 	cpufreq_debug_printk(CPUFREQ_DEBUG_DRIVER, "cpufreq-msm", msg)
@@ -66,6 +69,9 @@
 #define VDD_RAW(mv) (((MV(mv) / V_STEP) - 30) | VREG_DATA)
 
 #define MAX_AXI_KHZ 192000
+#define VIVOW_ACPU_MIN_UV_MV 750U
+#define VIVOW_ACPU_MAX_UV_MV 1450U
+
 
 struct clock_state {
 	struct clkctl_acpu_speed	*current_speed;
@@ -144,7 +150,15 @@ static struct cpufreq_frequency_table freq_table[] = {
         { 48, 1670400 },
         { 49, 1689600 },
         { 50, 1708800 },
-        { 51, CPUFREQ_TABLE_END },
+        { 51, 1804800 },
+/*
+	{ 52, 1843200 },
+	{ 53, 1900800 },
+	{ 54, 1920000 },
+	{ 55, 1996800 },
+	{ 56, 2035200 },
+*/
+	{ 52, CPUFREQ_TABLE_END },
 #else
 	{ 0, 245760 },
 	{ 1, 368640 },
@@ -220,6 +234,14 @@ static struct clkctl_acpu_speed acpu_freq_tbl[] = {
         { 1670400, PLL_2, 3, 0, 192000, 1300, VDD_RAW(1375) },
         { 1689600, PLL_2, 3, 0, 192000, 1300, VDD_RAW(1375) },
         { 1708800, PLL_2, 3, 0, 192000, 1300, VDD_RAW(1400) },
+	{ 1804800, PLL_2, 3, 0, 192000, 1425, VDD_RAW(1425) },
+/*
+	{ 1843200, PLL_2, 3, 0, 192000, 1450, VDD_RAW(1450) },
+	{ 1900800, PLL_2, 3, 0, 192000, 1500, VDD_RAW(1500) },
+	{ 1920000, PLL_2, 3, 0, 192000, 1500, VDD_RAW(1500) },
+	{ 1996800, PLL_2, 3, 0, 192000, 1525, VDD_RAW(1525) },
+	{ 2035200, PLL_2, 3, 0, 192000, 1550, VDD_RAW(1550) },
+*/
 #else
 	{ 24576,  SRC_LPXO, 0, 0,  30720,  1000, VDD_RAW(1000) },
 	{ 61440,  PLL_3,    5, 11, 61440,  1000, VDD_RAW(1000) },
@@ -243,66 +265,33 @@ static unsigned long max_axi_rate;
 unsigned long acpuclk_power_collapse(int from_idle)
 {
 	int ret = acpuclk_get_rate();
-        if (ret > drv_state.power_collapse_khz)
-                acpuclk_set_rate(drv_state.power_collapse_khz * 1000,
+        ret *= 1000;
+	if (ret > drv_state.power_collapse_khz)
+                acpuclk_set_rate(drv_state.power_collapse_khz,
         (from_idle ? SETRATE_PC_IDLE : SETRATE_PC));
-        return ret * 1000;
+        return ret;
 }
 
 unsigned long acpuclk_get_wfi_rate(void)
 {
-	return drv_state.wait_for_irq_khz * 1000;
+	return drv_state.wait_for_irq_khz;
 }
 
 unsigned long acpuclk_wait_for_irq(void)
 {
         int ret = acpuclk_get_rate();
-        if (ret > drv_state.wait_for_irq_khz)
-                acpuclk_set_rate(drv_state.wait_for_irq_khz * 1000, SETRATE_SWFI);
-        return ret * 1000;
+        ret *= 1000;
+	if (ret > drv_state.wait_for_irq_khz)
+                acpuclk_set_rate(drv_state.wait_for_irq_khz, SETRATE_SWFI);
+        return ret;
 }
-
-#ifdef CONFIG_HTC_SMEM_MSMC1C2_DEBUG
-/* mARM */
-#define HTC_SMEM_MSMC1		(MSM_SHARED_RAM_BASE + 0x000F8000)
-#define HTC_SMEM_AXI_SPEED	(MSM_SHARED_RAM_BASE + 0x000F8004)
-/* aARM */
-#define HTC_SMEM_MSMC2_STAT	(MSM_SHARED_RAM_BASE + 0x000F8100)
-#define HTC_SMEM_MSMC2_LAST	(MSM_SHARED_RAM_BASE + 0x000F8104)
-#define HTC_SMEM_MSMC2_CURR	(MSM_SHARED_RAM_BASE + 0x000F8108)
-#define HTC_SMEM_MSMC2_MSMC1	(MSM_SHARED_RAM_BASE + 0x000F810C)
-#define HTC_SMEM_MSMC2_AXI	(MSM_SHARED_RAM_BASE + 0x000F8110)
-#endif
 
 static int acpuclk_set_acpu_vdd(struct clkctl_acpu_speed *s)
 {
-#ifdef CONFIG_HTC_SMEM_MSMC1C2_DEBUG
-	unsigned int smem_val;
-	int ret;
 
-	/* store current MSMC1 and AXI */
-	smem_val = readl(HTC_SMEM_MSMC1);
-	writel(smem_val, HTC_SMEM_MSMC2_MSMC1);
-	smem_val = readl(HTC_SMEM_AXI_SPEED);
-	writel(smem_val, HTC_SMEM_MSMC2_AXI);
-
-	/* store last and current(target) MSMC2 */
-	smem_val = readl(HTC_SMEM_MSMC2_CURR);
-	if (smem_val)
-		writel(smem_val, HTC_SMEM_MSMC2_LAST);
-	writel(s->vdd_mv, HTC_SMEM_MSMC2_CURR);
-
-	writel(0x11112222, HTC_SMEM_MSMC2_STAT);
-	ret = msm_spm_set_vdd(s->vdd_raw);
-	if (ret)
-		return ret;
-	/* HTC_SMEM_MSMC2_CURR is valid only when STAT:0x33334444 */
-	writel(0x33334444, HTC_SMEM_MSMC2_STAT);
-#else
 	int ret = msm_spm_set_vdd(s->vdd_raw);
 	if (ret)
 		return ret;
-#endif
 
 	/* Wait for voltage to stabilize. */
 	udelay(drv_state.vdd_switch_time_us);
@@ -493,11 +482,11 @@ static unsigned int acpuclk_get_current_vdd(void)
 	unsigned int vdd_mv;
 
 	vdd_raw = msm_spm_get_vdd();
-	for (vdd_mv = 750; vdd_mv <= 1350; vdd_mv += 25)
+	for (vdd_mv = VIVOW_ACPU_MIN_UV_MV; vdd_mv <= VIVOW_ACPU_MAX_UV_MV; vdd_mv += V_STEP)
 		if (VDD_RAW(vdd_mv) == vdd_raw)
 			break;
 
-	if (vdd_mv > 1350)
+	if (vdd_mv > VIVOW_ACPU_MAX_UV_MV)
 		return 0;
 
 	return vdd_mv;
@@ -516,7 +505,7 @@ static int acpuclk_update_freq_tbl(unsigned int acpu_khz, unsigned int acpu_vdd)
 		pr_err("%s: acpuclk invalid speed %d\n", __func__, acpu_khz);
 		return -1;
 	}
-	if (acpu_vdd > 1350 || acpu_vdd < 750) {
+	if (acpu_vdd > VIVOW_ACPU_MAX_UV_MV || acpu_vdd < VIVOW_ACPU_MIN_UV_MV) {
 		pr_err("%s: acpuclk vdd out of ranage, %d\n",
 			__func__, acpu_vdd);
 		return -2;
@@ -629,6 +618,7 @@ static void __init lpj_init(void)
 	}
 }
 
+#ifndef CONFIG_ACPUCLOCK_OVERCLOCKING
 /* Update frequency tables for PLL2. */
 void __init pll2_fixup(void)
 {
@@ -637,13 +627,9 @@ void __init pll2_fixup(void)
 	u8 pll2_l;
 
 	pll2_l = readl(PLL2_L_VAL_ADDR) & 0xFF;
-#ifdef CONFIG_ACPUCLOCK_OVERCLOCKING
-speed = &acpu_freq_tbl[8];
-cpu_freq = &freq_table[3];
-#else
+
 	speed = &acpu_freq_tbl[ARRAY_SIZE(acpu_freq_tbl)-2];
 	cpu_freq = &freq_table[ARRAY_SIZE(freq_table)-2];
-#endif
 
 	if (speed->acpu_clk_khz != 806400 || cpu_freq->frequency != 806400) {
 		pr_err("Frequency table fixups for PLL2 rate failed.\n");
@@ -690,6 +676,7 @@ speed->axi_clk_khz = UINT_MAX;
 #endif
 
 }
+#endif
 
 #define RPM_BYPASS_MASK	(1 << 3)
 #define PMIC_MODE_MASK	(1 << 4)
@@ -703,8 +690,10 @@ void __init msm_acpu_clock_init(struct msm_acpu_clock_platform_data *clkdata)
 	drv_state.power_collapse_khz = clkdata->power_collapse_khz;
         drv_state.wfi_ramp_down = 1;
 	drv_state.pwrc_ramp_down = 1;
+#ifndef CONFIG_ACPUCLOCK_OVERCLOCKING
 #ifndef CONFIG_ACPUCLOCK_LIMIT_768MHZ
 	pll2_fixup();
+#endif
 #endif
 	acpuclk_init();
 	lpj_init();
@@ -713,3 +702,41 @@ void __init msm_acpu_clock_init(struct msm_acpu_clock_platform_data *clkdata)
 	register_acpuclock_debug_dev(&acpu_debug_7x30);
 }
 
+#ifdef CONFIG_CPU_FREQ_VDD_LEVELS
+
+ssize_t acpuclk_get_vdd_levels_str(char *buf)
+{
+int i, len = 0;
+if (buf)
+{
+mutex_lock(&drv_state.lock);
+for (i = 0; acpu_freq_tbl[i].acpu_clk_khz; i++)
+{
+len += sprintf(buf + len, "%8u: %4d\n", acpu_freq_tbl[i].acpu_clk_khz, acpu_freq_tbl[i].vdd_mv);
+}
+mutex_unlock(&drv_state.lock);
+}
+return len;
+}
+
+void acpuclk_set_vdd(unsigned int khz, int vdd)
+{
+int i;
+unsigned int new_vdd;
+vdd = vdd / V_STEP * V_STEP;
+mutex_lock(&drv_state.lock);
+for (i = 0; acpu_freq_tbl[i].acpu_clk_khz; i++)
+{
+if (khz == 0)
+new_vdd = min(max((acpu_freq_tbl[i].vdd_mv + vdd), VIVOW_ACPU_MIN_UV_MV), VIVOW_ACPU_MAX_UV_MV);
+else if (acpu_freq_tbl[i].acpu_clk_khz == khz)
+new_vdd = min(max((unsigned int)vdd, VIVOW_ACPU_MIN_UV_MV), VIVOW_ACPU_MAX_UV_MV);
+else continue;
+
+acpu_freq_tbl[i].vdd_mv = new_vdd;
+acpu_freq_tbl[i].vdd_raw = VDD_RAW(new_vdd);
+}
+mutex_unlock(&drv_state.lock);
+}
+
+#endif
