@@ -25,8 +25,10 @@
 /* Make sure the kernel is not overclocked on boot to avoid potential freezing/boot loops
 +* for people with less capable hardware. */
 
+#ifdef CONFIG_ACPUCLOCK_OVERCLOCKING
 #define CPUFREQ_MAX 1017600
 #define CPUFREQ_MIN 245760
+#endif
 
 #ifdef CONFIG_MSM_CPU_FREQ_SCREEN
 static void msm_early_suspend(struct early_suspend *handler) {
@@ -97,6 +99,7 @@ static int msm_cpufreq_init(struct cpufreq_policy *policy)
 	BUG_ON(cpufreq_frequency_table_cpuinfo(policy, table));
 	policy->cur = acpuclk_get_rate();
 	policy->cpuinfo.transition_latency =
+#ifdef CONFIG_ACPUCLOCK_OVERCLOCKING
 #if 0
 	/* restrict cpu freq scaling range by overwriting */
 	policy->min = CONFIG_MSM_CPU_FREQ_ONDEMAND_MIN;
@@ -107,6 +110,9 @@ static int msm_cpufreq_init(struct cpufreq_policy *policy)
 	policy->min = CPUFREQ_MIN;
 	policy->cpuinfo.transition_latency =
 	acpuclk_get_switch_time() * NSEC_PER_USEC;
+#else
+	acpuclk_get_switch_time() * NSEC_PER_USEC;
+#endif
 	return 0;
 }
 
