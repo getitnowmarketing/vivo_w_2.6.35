@@ -1354,3 +1354,11 @@ config PROC_COMM_TIMEOUT_RESET
     help
 		To reset device while modem hang, and cannot respond proc_comm.
 		Enable this might cause slight overhead on each proc_comm call.
+
+config ACPUCLOCK_OVERCLOCKING
+	bool "Enable Overclocking QSD8X55"
+	depends on ARCH_MSM7X30
+	default n
+	help
+	This enables freq above 1024000 QSD8X55
+
