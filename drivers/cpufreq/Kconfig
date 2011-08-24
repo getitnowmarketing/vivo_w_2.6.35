@@ -149,7 +149,6 @@ config CPU_FREQ_DEFAULT_GOV_SUPERBAD
 	help
 	  Use the CPUFreq governor 'superbad' as default.
 
->>>>>>> 206deac... UPDATE: CPU governors, added Interactive, MinMax, OndemandX, Scary, SmartAss, Superbad
 endchoice
 
 config CPU_FREQ_GOV_PERFORMANCE
