@@ -105,10 +105,7 @@ obj-$(CONFIG_RIONET) += rionet.o
 obj-$(CONFIG_SH_ETH) += sh_eth.o
 obj-$(CONFIG_STMMAC_ETH) += stmmac/
 obj-$(CONFIG_KINETO_GAN) += kineto_gan.o
-<<<<<<< HEAD
-=======
 obj-$(CONFIG_GAN_ETH) += gan-eth.o
->>>>>>> 22a3b92... ADD: HTC kineto_gan support for WiFi calling
 
 #
 # end link order section
