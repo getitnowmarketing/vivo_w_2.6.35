@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.35.14
-# Thu Aug 25 09:12:18 2011
+# Thu Aug 25 09:13:15 2011
 #
 
 CONFIG_ARM=y
@@ -1068,6 +1068,7 @@ CONFIG_DUMMY=y
 # CONFIG_MACVLAN is not set
 # CONFIG_EQUALIZER is not set
 # CONFIG_TUN is not set
+CONFIG_TUN=y
 # CONFIG_VETH is not set
 # CONFIG_NET_ETHERNET is not set
 CONFIG_NETDEV_1000=y
@@ -1914,7 +1915,12 @@ CONFIG_NETWORK_FILESYSTEMS=y
 # CONFIG_NFSD is not set
 # CONFIG_SMB_FS is not set
 # CONFIG_CEPH_FS is not set
-# CONFIG_CIFS is not set
+CONFIG_CIFS=y
+# CONFIG_CIFS_STATS is not set
+# CONFIG_CIFS_WEAK_PW_HASH is not set
+# CONFIG_CIFS_XATTR is not set
+# CONFIG_CIFS_DEBUG2 is not set
+# CONFIG_CIFS_EXPERIMENTAL is not set
 # CONFIG_NCP_FS is not set
 # CONFIG_CODA_FS is not set
 # CONFIG_AFS_FS is not set
