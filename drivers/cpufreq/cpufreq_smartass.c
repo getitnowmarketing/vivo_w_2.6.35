@@ -219,12 +219,12 @@ static void cpufreq_idle(void)
  */
 static unsigned int cpufreq_smartass_calc_freq(unsigned int cpu, struct cpufreq_policy *policy)
 {
-  unsigned int delta_time;
-  unsigned int idle_time;
-  unsigned int cpu_load;
-  unsigned int new_freq;
-  u64 current_wall_time;
-  u64 current_idle_time;
+  unsigned int delta_time = 0;
+  unsigned int idle_time = 0;
+  unsigned int cpu_load = 0;
+  unsigned int new_freq = 0;
+  u64 current_wall_time = 0;
+  u64 current_idle_time =0;
 
   current_idle_time = get_cpu_idle_time_us(cpu, &current_wall_time);
 
