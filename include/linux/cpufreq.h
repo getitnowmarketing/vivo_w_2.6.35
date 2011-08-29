@@ -384,6 +384,9 @@ extern struct cpufreq_governor cpufreq_gov_scary;
 #elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_SUPERBAD)
 extern struct cpufreq_governor cpufreq_gov_superbad;
 #define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_superbad)
+#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_GREASELIGHTNING)
+extern struct cpufreq_governor cpufreq_gov_greaselightning;
+#define CPUFREQ_DEFAULT_GOVERNOR  (&cpufreq_gov_greaselightning)
 #endif
 
 
