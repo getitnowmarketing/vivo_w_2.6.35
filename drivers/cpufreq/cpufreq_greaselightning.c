@@ -793,8 +793,8 @@ static int __init cpufreq_greaselightning_init(void)
         }
 
         /* Scale up is high priority */
-        up_wq = alloc_workqueue("kgreaselightning_up", WQ_HIGHPRI | WQ_CPU_INTENSIVE, 1);
-        down_wq = create_workqueue("kgreaselightning_down");
+        up_wq = create_rt_workqueue("kgreaselightning_up");
+  	down_wq = create_workqueue("kgreaselightning_down");
 
         INIT_WORK(&freq_scale_work, cpufreq_greaselightning_freq_change_time_work);
 
