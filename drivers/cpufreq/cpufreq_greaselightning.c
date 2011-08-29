@@ -105,7 +105,7 @@ static unsigned int sleep_max_freq;
 #define DEFAULT_SLEEP_WAKEUP_FREQ 1017000;
 static unsigned int sleep_wakeup_freq;
 
-#define UP_THRESHOLD_FREQ 1516800;
+#define UP_THRESHOLD_FREQ 1536000;
 static unsigned int threshold_freq;
 
 /*
