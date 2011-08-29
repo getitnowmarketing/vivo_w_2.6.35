@@ -1,8 +1,9 @@
-/* Copyright (c) 2008-2009, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2009-2010 Code Aurora Forum, All rights reserved.
+ * Copyright (C) 2009 Google, Inc.
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 and
- * only version 2 as published by the Free Software Foundation.
+ * This software is licensed under the terms of the GNU General Public
+ * License version 2, as published by the Free Software Foundation, and
+ * may be copied, distributed, and modified under those terms.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -130,6 +131,12 @@ static void sirc_irq_handler(unsigned int irq, struct irq_desc *desc)
 	while ((reg < ARRAY_SIZE(sirc_reg_table)) &&
 		(sirc_reg_table[reg].cascade_irq != irq))
 		reg++;
+
+	if (reg == ARRAY_SIZE(sirc_reg_table)) {
+		printk(KERN_ERR "%s: incorrect irq %d called\n",
+			__func__, irq);
+		return;
+	}
 
 	status = readl(sirc_reg_table[reg].int_status);
 	status &= SIRC_MASK;
