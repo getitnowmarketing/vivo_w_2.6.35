@@ -163,7 +163,7 @@ static int cpufreq_governor_greaselightning(struct cpufreq_policy *policy,
 static
 #endif
 struct cpufreq_governor cpufreq_gov_greaselightning = {
-        .name = "greaselightning",
+        .name = "greaslightning",
         .governor = cpufreq_governor_greaselightning,
         .max_transition_latency = 9000000,
         .owner = THIS_MODULE,
