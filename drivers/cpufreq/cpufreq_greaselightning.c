@@ -102,10 +102,10 @@ static unsigned int sleep_max_freq;
  * The frequency to set when waking up from sleep.
  * When sleep_max_freq=0 this will have no effect.
  */
-#define DEFAULT_SLEEP_WAKEUP_FREQ 1017000;
+#define DEFAULT_SLEEP_WAKEUP_FREQ 1024000;
 static unsigned int sleep_wakeup_freq;
 
-#define UP_THRESHOLD_FREQ 1536000;
+#define UP_THRESHOLD_FREQ 1516800;
 static unsigned int threshold_freq;
 
 /*

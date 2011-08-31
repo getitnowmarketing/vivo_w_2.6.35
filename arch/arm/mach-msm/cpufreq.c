@@ -26,7 +26,7 @@
 +* for people with less capable hardware. */
 
 #ifdef CONFIG_ACPUCLOCK_OVERCLOCKING
-#define CPUFREQ_MAX 1017600
+#define CPUFREQ_MAX 1024000
 #define CPUFREQ_MIN 245760
 #endif
 
