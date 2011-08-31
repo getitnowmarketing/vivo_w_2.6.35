@@ -582,8 +582,8 @@ void __init pll2_fixup(void)
 	switch (pll2_l) {
 	case PLL2_1024_MHZ:
 		speed->acpu_clk_khz = 1024000;
-		speed->vdd_mv = 1050;
-		speed->vdd_raw = VDD_RAW(1050);
+		speed->vdd_mv = 1075;
+		speed->vdd_raw = VDD_RAW(1075);
 		cpu_freq->frequency = 1024000;
 		break;
 	case PLL2_1200_MHZ:
