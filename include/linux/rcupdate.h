@@ -33,7 +33,6 @@
 #ifndef __LINUX_RCUPDATE_H
 #define __LINUX_RCUPDATE_H
 
-#include <linux/rcu_types.h>
 #include <linux/cache.h>
 #include <linux/spinlock.h>
 #include <linux/threads.h>
@@ -638,3 +637,4 @@ static inline void debug_rcu_head_unqueue(struct rcu_head *head)
 #endif  /* #else !CONFIG_DEBUG_OBJECTS_RCU_HEAD */
 
 #endif /* __LINUX_RCUPDATE_H */
+
