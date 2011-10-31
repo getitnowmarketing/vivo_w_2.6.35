@@ -510,7 +510,11 @@ int android_switch_function(unsigned func)
 
 #ifdef CONFIG_USB_GADGET_MSM_72K
 	msm_hsusb_request_reset();
-#else
+#endif
+
+#ifndef CONFIG_USB_GADGET_MSM_72K
+
+#ifndef CONFIG_SENSE_234_COMPAT
 	/* force reenumeration */
 	if (dev->cdev && dev->cdev->gadget &&
 			dev->cdev->gadget->speed != USB_SPEED_UNKNOWN) {
@@ -518,6 +522,11 @@ int android_switch_function(unsigned func)
 		msleep(10);
 		usb_gadget_connect(dev->cdev->gadget);
 	}
+#else 
+		usb_gadget_disconnect(dev->cdev->gadget);
+		msleep(10);
+		usb_gadget_connect(dev->cdev->gadget);
+#endif
 #endif
 	return 0;
 }

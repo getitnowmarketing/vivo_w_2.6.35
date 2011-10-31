@@ -1161,6 +1161,9 @@ composite_unbind(struct usb_gadget *gadget)
 	}
 
 	switch_dev_unregister(&cdev->sw_connected);
+#ifdef CONFIG_SENSE_234_COMPAT
+	switch_dev_unregister(&cdev->sw_connect2pc);
+#endif	
 	switch_dev_unregister(&cdev->sw_config);
 	kfree(cdev);
 	set_gadget_data(gadget, NULL);
@@ -1204,6 +1207,9 @@ composite_switch_work(struct work_struct *data)
 		connected = cdev->connected;
 		spin_unlock_irqrestore(&cdev->lock, flags);
 		switch_set_state(&cdev->sw_connected, connected);
+#ifdef CONFIG_SENSE_234_COMPAT
+		switch_set_state(&cdev->sw_connect2pc, connected);
+#endif
 		printk(KERN_INFO "set usb_connected = %d\n", connected);
 	} else {
 		spin_unlock_irqrestore(&cdev->lock, flags);
@@ -1272,6 +1278,12 @@ static int composite_bind(struct usb_gadget *gadget)
 	status = switch_dev_register(&cdev->sw_config);
 	if (status < 0)
 		goto fail;
+#ifdef CONFIG_SENSE_234_COMPAT
+	cdev->sw_connect2pc.name = "usb_connect2pc";
+	status = switch_dev_register(&cdev->sw_connect2pc);
+	if (status < 0)
+		goto fail;
+#endif
 	INIT_WORK(&cdev->switch_work, composite_switch_work);
 
 	cdev->desc = *composite->dev;

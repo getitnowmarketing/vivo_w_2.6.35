@@ -1034,4 +1034,9 @@ config USB_HUB
 	boolean "USB HUB driver"
 	depends on USB_ANDROID
 	default n
+
+config SENSE_234_COMPAT
+	boolean "HTC Sense 2.3.4+ Usb mass storage compatabilty"
+	depends on USB_ANDROID
+	default n
 endif # USB_GADGET

@@ -358,6 +358,10 @@ struct usb_composite_dev {
 	/* switch indicating current configuration */
 	struct switch_dev		sw_config;
 	/* current connected state for sw_connected */
+#ifdef CONFIG_SENSE_234_COMPAT
+	/* switch indicating connected/disconnected state */
+	struct switch_dev  		sw_connect2pc;
+#endif
 	bool				connected;
 
 	struct work_struct switch_work;
