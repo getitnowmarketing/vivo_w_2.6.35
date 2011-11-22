@@ -70,6 +70,8 @@ static char *iSerialNumber;
 module_param(iSerialNumber, charp, 0);
 MODULE_PARM_DESC(iSerialNumber, "SerialNumber string");
 
+static bool connect2pc;
+
 /*-------------------------------------------------------------------------*/
 
 
@@ -131,10 +133,15 @@ static DEVICE_ATTR(enable, S_IRUGO | S_IWUSR, enable_show, enable_store);
 
 void usb_function_set_enabled(struct usb_function *f, int enabled)
 {
-	f->hidden = !enabled;
-	kobject_uevent(&f->dev->kobj, KOBJ_CHANGE);
+	usb_function_set_enabled_mute(f, enabled, false);
 }
 
+void usb_function_set_enabled_mute(struct usb_function *f, int enabled, bool bMute)
+{
+	f->hidden = !enabled;
+	if (!bMute)
+	    kobject_uevent(&f->dev->kobj, KOBJ_CHANGE);
+}
 
 /**
  * usb_add_function() - add a function to a configuration
@@ -303,6 +310,7 @@ int usb_interface_id(struct usb_configuration *config,
 	if (id < MAX_CONFIG_INTERFACES) {
 		config->interface[id] = function;
 		config->next_interface_id = id + 1;
+		printk(KERN_INFO "%s: allocated %d", function->name, id);
 		return id;
 	}
 	return -ENODEV;
@@ -1162,6 +1170,7 @@ composite_unbind(struct usb_gadget *gadget)
 
 	switch_dev_unregister(&cdev->sw_connected);
 	switch_dev_unregister(&cdev->sw_config);
+	switch_dev_unregister(&cdev->sw_connect2pc);
 	kfree(cdev);
 	set_gadget_data(gadget, NULL);
 	device_remove_file(&gadget->dev, &dev_attr_suspended);
@@ -1213,12 +1222,29 @@ composite_switch_work(struct work_struct *data)
 		switch_set_state(&cdev->sw_config, config->bConfigurationValue);
 	else
 		switch_set_state(&cdev->sw_config, 0);
+	printk(KERN_INFO "set usb_configuration = %d\n",
+		    config ? config->bConfigurationValue : 0);
+
+	if (connect2pc == 1) {
+		if (!cdev->connected && !config) {
+			connect2pc = 0;
+			switch_set_state(&cdev->sw_connect2pc, 0);
+			printk(KERN_INFO "set usb_connect2pc = 0\n");
+		}
+	} else if (config) { /* also satisfy connect2pc == 0 */
+		if (config->bConfigurationValue && cdev->connected) {
+			connect2pc = 1;
+			switch_set_state(&cdev->sw_connect2pc, 1);
+			printk(KERN_INFO "set usb_connect2pc = 1\n");
+		}
+	}
 }
 
 static void composite_func_enable_event(struct usb_composite_dev *cdev)
 {
+	/* send 0 here to let usb_configuration toggle */
 	switch_set_state(&cdev->sw_config, 0);
-	printk(KERN_INFO "set usb_configuration = 0\n");
+	printk(KERN_INFO "func_enable: set usb_configuration = 0\n");
 }
 
 static int composite_bind(struct usb_gadget *gadget)
@@ -1276,10 +1302,17 @@ static int composite_bind(struct usb_gadget *gadget)
 	status = switch_dev_register(&cdev->sw_connected);
 	if (status < 0)
 		goto fail;
+
 	cdev->sw_config.name = "usb_configuration";
 	status = switch_dev_register(&cdev->sw_config);
 	if (status < 0)
 		goto fail;
+
+	cdev->sw_connect2pc.name = "usb_connect2pc";
+	status = switch_dev_register(&cdev->sw_connect2pc);
+	if (status < 0)
+		goto fail;
+
 	INIT_WORK(&cdev->switch_work, composite_switch_work);
 
 	cdev->desc = *composite->dev;

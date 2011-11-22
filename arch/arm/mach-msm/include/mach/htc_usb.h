@@ -23,6 +23,9 @@ void msm_hsusb_8x50_phy_reset(void);
 #undef ERROR
 #endif
 #include <linux/usb/android_composite.h>
+#ifdef CONFIG_USB_ANDROID_ACCESSORY
+#include <linux/usb/f_accessory.h>
+#endif
 
 static char *usb_functions_ums[] = {
 	"usb_mass_storage",
@@ -57,6 +60,10 @@ static char *usb_functions_rndis_adb_diag[] = {
 	"diag",
 };
 #endif
+#endif
+#ifdef CONFIG_USB_ANDROID_ACCESSORY
+static char *usb_functions_accessory[] = { "accessory" };
+static char *usb_functions_accessory_adb[] = { "accessory", "adb" };
 #endif
 
 #ifdef CONFIG_USB_ANDROID_PROJECTOR
@@ -175,6 +182,9 @@ static char *usb_functions_acm[] = {
 static char *usb_functions_all[] = {
 #ifdef CONFIG_USB_ANDROID_RNDIS
 	"ether",
+#endif
+#ifdef CONFIG_USB_ANDROID_ACCESSORY
+	"accessory",
 #endif
 #ifdef CONFIG_USB_ANDROID_MTP
 	"mtp",
@@ -346,7 +356,21 @@ static struct android_usb_product usb_products[] = {
 	},
 #endif
 #endif
-};
+#ifdef CONFIG_USB_ANDROID_ACCESSORY
+	{
+		.vendor_id	= USB_ACCESSORY_VENDOR_ID,
+		.product_id	= USB_ACCESSORY_PRODUCT_ID,
+		.num_functions	= ARRAY_SIZE(usb_functions_accessory),
+		.functions	= usb_functions_accessory,
+	},
+	{
+		.vendor_id	= USB_ACCESSORY_VENDOR_ID,
+		.product_id	= USB_ACCESSORY_ADB_PRODUCT_ID,
+		.num_functions	= ARRAY_SIZE(usb_functions_accessory_adb),
+		.functions	= usb_functions_accessory_adb,
+	},
 #endif
+};
+#endif /* CONFIG_USB_ANDROID */
 
 #endif
