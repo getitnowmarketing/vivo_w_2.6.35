@@ -3040,18 +3040,7 @@ no_journal:
 		ext4_msg(sb, KERN_ERR, "insufficient memory");
 		goto failed_mount_wq;
 	}
-	if (test_opt(sb, NOBH)) {
-		if (!(test_opt(sb, DATA_FLAGS) == EXT4_MOUNT_WRITEBACK_DATA)) {
-			ext4_msg(sb, KERN_WARNING, "Ignoring nobh option - "
-				"its supported only with writeback mode");
-			clear_opt(sbi->s_mount_opt, NOBH);
-		}
-		if (test_opt(sb, DIOREAD_NOLOCK)) {
-			ext4_msg(sb, KERN_WARNING, "dioread_nolock option is "
-				"not supported with nobh mode");
-			goto failed_mount_wq;
-		}
-	}
+	
 
 	EXT4_SB(sb)->dio_unwritten_wq = create_workqueue("ext4-dio-unwritten");
 	if (!EXT4_SB(sb)->dio_unwritten_wq) {
